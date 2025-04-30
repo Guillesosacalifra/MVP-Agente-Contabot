@@ -23,3 +23,9 @@ Este proyecto implementa un agente de inteligencia artificial diseñado para aut
 
 ## Instalación
 [Instrucciones de instalación pendientes]
+
+## Desarrollo
+### Manejo de Ramas (Branches)
+- La rama `main` es protegida y no debe modificarse directamente
+- Todo el desarrollo y modificaciones deben realizarse en la rama `TEST`
+- Los cambios en `TEST` deben ser revisados y aprobados antes de ser mergeados a `main`

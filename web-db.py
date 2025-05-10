@@ -6,6 +6,7 @@ import pandas as pd
 import sqlite3
 import os
 from openai import OpenAI
+import plotly.express as px
 # import openai
 from dotenv import load_dotenv
 
@@ -197,6 +198,26 @@ with tab_resumen:
         st.dataframe(gasto_por_categoria, use_container_width=True)
     else:
         st.warning("⚠️ No se pudo calcular el gasto por categoría en UYU.")
+    
+    # ================================
+    # 📈 Gráfico de dona por categoría
+    # ================================
+    
+    st.subheader("Distribución por categoría (UYU)")
+    fig_dona = px.pie(
+        gasto_por_categoria,
+        names="categoria",
+        values="monto_UYU",
+        hole=0.4,
+        title="Gasto por categoría en moneda local (UYU)"
+    )
+    fig_dona.update_traces(
+        textposition='outside',
+        textinfo='percent+label',
+        marker=dict(line=dict(color='#FFFFFF', width=2))
+    )
+    fig_dona.update_layout(showlegend=False)
+    st.plotly_chart(fig_dona, use_container_width=True)
 
 with tab_datos:
     # -----------------------

@@ -49,8 +49,8 @@ def get_date_range():
     return result['min_date'][0], result['max_date'][0]
 
 # Consulta a OpenAI con los datos y la pregunta del usuario
-def query_data(data_json, question, model_name="gpt-4o"):
-    prompt = f"Basado en los siguientes datos, respondé la pregunta:\n{data_json}\nPregunta: {question}"
+def query_data(data_json, question, model_name="gpt-4o-mini"):
+    prompt = f"Basado UNICAMENTE en los datos, respondé la pregunta:\n{data_json}\nPregunta: {question}"
 
     completion = client.chat.completions.create(
         messages=[

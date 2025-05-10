@@ -21,7 +21,8 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 st.set_page_config(layout="wide")
 
 # Ruta a la base de datos SQLite y nombre de la tabla
-DB_PATH = os.getenv("DB_PATH")
+DB_PATH = "facturas_xml_items.db"
+
 TABLE_NAME = "items_factura"
 
 

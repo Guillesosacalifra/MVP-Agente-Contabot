@@ -50,12 +50,15 @@ def get_date_range():
 
 # Consulta a OpenAI con los datos y la pregunta del usuario
 def query_data(data_json, question, model_name="gpt-4o-mini"):
-    prompt = f"Basado UNICAMENTE en los datos, respondé la pregunta:\n{data_json}\nPregunta: {question}"
+    prompt = f"Basado UNICAMENTE en los datos \n{data_json}\n, respondé la pregunta:\nPregunta: {question}"
+
+    assistant_prompt = "solo responde con la informacion de la base de datos, no inventes informacion, solo responde la pregunta con los datos reales de la base. Si no encuentras la informacion, responde que no encontraste datos para esa pregunta."
 
     completion = client.chat.completions.create(
         messages=[
-            {"role": "system", "content": "Sos un asistente financiero que responde de forma clara y breve."},
-            {"role": "user", "content": prompt}
+            {"role": "system", "content": "Sos un asistente financiero que responde con la informacion de la base de datos."},
+            {"role": "user", "content": prompt},
+            {"role": "assistant", "content": assistant_prompt}
         ],
         model=model_name
     )

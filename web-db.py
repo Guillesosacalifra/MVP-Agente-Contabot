@@ -56,7 +56,7 @@ def query_data(data_json, question, model_name="gpt-4o-mini"):
         "1. Una tabla detallada de movimientos financieros (facturas, fechas, montos, proveedores).\n"
         "2. Una tabla de resumen por categoría (`gasto_por_categoria`), que indica el gasto total representado en UYU por categoría.\n\n"
         "Tu tarea es responder la siguiente pregunta exclusivamente en base a los datos proporcionados.\n"
-        "- Si la pregunta menciona categorías, respondé exclusivamente en base a la tabla de categorías.\n"
+        "- Si la pregunta menciona algun dato de la tabla categorías o la palabra categoria, respondé exclusivamente en base a la tabla de categorías.\n"
         "- Si no, respondé usando la tabla de movimientos detallados.\n"
         "- No inventes valores ni hagas cálculos propios. Respondé únicamente con los datos dados.\n\n"
         f"Tabla de categorías:\n{gasto_por_categoria.to_json(orient='records')}\n\n"

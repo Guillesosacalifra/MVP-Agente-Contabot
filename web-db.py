@@ -5,7 +5,8 @@ import streamlit as st
 import pandas as pd
 import sqlite3
 import os
-from openai import OpenAI
+# from openai import OpenAI
+import openai
 from dotenv import load_dotenv
 
 # Cargar variables del archivo .env
@@ -13,7 +14,7 @@ load_dotenv()
 
 # Inicializar cliente OpenAI con clave API desde entorno
 openai_key = os.getenv("OPENAI_API_KEY")
-client = OpenAI(api_key=openai_key)
+client = openai(api_key=openai_key)
 
 # Configuración de la página Streamlit
 st.set_page_config(layout="wide")

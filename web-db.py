@@ -151,7 +151,7 @@ def configure_sidebar_and_get_data():
     st.sidebar.divider()
     
     # Limitar cantidad de filas a mostrar
-    row_limit = st.sidebar.slider('🔢 Limitar filas mostradas:', 10, 1000, 100)
+    row_limit = st.sidebar.slider('🔢 Limitar filas mostradas:', 10, 1000, 500)
     
     # Construir query con filtros
     query = f"SELECT * FROM {TABLE_NAME} WHERE 1=1"

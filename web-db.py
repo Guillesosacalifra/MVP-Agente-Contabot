@@ -5,17 +5,17 @@ import streamlit as st
 import pandas as pd
 import sqlite3
 import os
-# from openai import OpenAI
-import openai
+from openai import OpenAI
+# import openai
 from dotenv import load_dotenv
 
 # Cargar variables del archivo .env
 load_dotenv()
 
 # Inicializar cliente OpenAI con clave API desde entorno
-# openai_key = os.getenv("OPENAI_API_KEY")
-# client = openai(api_key=openai_key)
-openai.api_key = os.getenv("OPENAI_API_KEY")
+openai_key = os.getenv("OPENAI_API_KEY")
+client = openai(api_key=openai_key)
+# openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # Configuración de la página Streamlit
 st.set_page_config(layout="wide")
@@ -52,7 +52,7 @@ def get_date_range():
 def query_data(data_json, question, model_name="gpt-4o"):
     prompt = f"Basado en los siguientes datos, respondé la pregunta:\n{data_json}\nPregunta: {question}"
 
-    completion = openai.ChatCompletion.create(
+    completion = client.chat.completions.create(
         messages=[
             {"role": "system", "content": "Sos un asistente financiero que responde de forma clara y breve."},
             {"role": "user", "content": prompt}

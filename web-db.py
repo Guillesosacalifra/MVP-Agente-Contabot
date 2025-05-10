@@ -14,7 +14,7 @@ load_dotenv()
 
 # Inicializar cliente OpenAI con clave API desde entorno
 openai_key = os.getenv("OPENAI_API_KEY")
-client = openai(api_key=openai_key)
+client = OpenAI(api_key=openai_key)
 # openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # Configuración de la página Streamlit

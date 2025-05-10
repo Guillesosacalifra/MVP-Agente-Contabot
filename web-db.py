@@ -50,30 +50,35 @@ def get_date_range():
 
 # Consulta a OpenAI con los datos y la pregunta del usuario
 def query_data(data_json, question, model_name="gpt-4o-mini"):
-    prompt = f"Basado UNICAMENTE en los datos \n{data_json}\n, respondé la pregunta:\nPregunta: {question}"
+    # Crear el mensaje completo con instrucciones y tablas
+    user_prompt = (
+        "Tenés acceso a dos tablas:\n"
+        "1. Una tabla detallada de movimientos financieros (facturas, fechas, montos, proveedores).\n"
+        "2. Una tabla de resumen por categoría (`gasto_por_categoria`), que indica el gasto total representado en UYU por categoría.\n\n"
+        "Tu tarea es responder la siguiente pregunta exclusivamente en base a los datos proporcionados.\n"
+        "- Si la pregunta menciona categorías, respondé exclusivamente en base a la tabla de categorías.\n"
+        "- Si no, respondé usando la tabla de movimientos detallados.\n"
+        "- No inventes valores ni hagas cálculos propios. Respondé únicamente con los datos dados.\n\n"
+        f"Tabla de categorías:\n{gasto_por_categoria.to_json(orient='records')}\n\n"
+        f"Tabla de movimientos:\n{data_json}\n\n"
+        f"Pregunta: {question}"
+    )
 
-    assistant_prompt = "solo responde con la informacion de la base de datos, no inventes informacion, solo responde la pregunta con los datos reales de la base. Si no encuentras la informacion, responde que no encontraste datos para esa pregunta."
-
+    # Llamada a la API
     completion = client.chat.completions.create(
         messages=[
-            {"role": "system", "content": "Sos un asistente financiero que responde con la informacion de la base de datos."},
-            {"role": "user", "content": prompt},
-            {"role": "assistant", "content": assistant_prompt}
+            {"role": "system", "content": "Sos un asistente financiero que responde de forma clara y basada solo en datos."},
+            {"role": "user", "content": user_prompt}
         ],
         model=model_name
     )
 
-    # Obtener uso de tokens
+    # Uso de tokens
     usage = completion.usage
-    prompt_tokens = usage.prompt_tokens
-    completion_tokens = usage.completion_tokens
-    total_tokens = usage.total_tokens
-
-    # Mostrar consumo de tokens
-    print(f"🧮 Tokens usados - Prompt: {prompt_tokens}, Completion: {completion_tokens}, Total: {total_tokens}")
-    st.info(f"🧮 Tokens usados - Prompt: {prompt_tokens}, Completion: {completion_tokens}, Total: {total_tokens}")
+    st.info(f"🧮 Tokens usados - Prompt: {usage.prompt_tokens}, Completion: {usage.completion_tokens}, Total: {usage.total_tokens}")
 
     return completion.choices[0].message.content.strip()
+
 
 
 # =======================
@@ -228,7 +233,7 @@ with tab_ia:
     if st.button("Preguntar a ChatGPT"):
         if user_question:
             # Usamos solo columnas clave para evitar exceso de tokens
-            columnas_clave = ["fecha", "proveedor", "categoria", "monto_item", "tipo_moneda"]
+            columnas_clave = ["fecha", "proveedor", "categoria", "monto_item", "tipo_moneda", "monto_UYU"]
             data_reducido = data_limited[columnas_clave].head(1500)
             data_json = data_reducido.to_json(orient='records')
             respuesta = query_data(data_json, user_question)

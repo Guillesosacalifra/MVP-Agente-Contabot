@@ -175,10 +175,6 @@ def configure_sidebar_and_get_data():
 
 def show_metrics_tab(data_limited):
     """Muestra métricas y gráficos en la pestaña de resumen."""
-    # Importar plotly para gráficos
-    import plotly.express as px
-    import plotly.graph_objects as go
-    
     # Contadores generales
     num_rows = len(data_limited)
     num_proveedores = data_limited['proveedor'].nunique()

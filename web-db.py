@@ -225,7 +225,7 @@ def show_metrics_tab(data_limited):
             st.subheader("📊 Distribución por categoría")
             
             # Opciones de visualización
-            top_n = st.slider("Mostrar top categorías", 3, min(10, len(gasto_por_categoria)), 5)
+            top_n = st.slider("Mostrar top categorías", 4, min(10, len(gasto_por_categoria)), 5)
             
             # Preparar datos para gráfico más visual
             if len(gasto_por_categoria) > top_n:

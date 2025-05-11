@@ -76,7 +76,7 @@ def query_data(data_json, question, model_name="gpt-4o-mini"):
         model=model_name
     )
 
-    # Obtener uso de tokens
+    # Obtener uso de los tokens
     usage = completion.usage
     prompt_tokens = usage.prompt_tokens
     completion_tokens = usage.completion_tokens

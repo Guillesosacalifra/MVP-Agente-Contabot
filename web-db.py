@@ -15,6 +15,7 @@ import os
 import openai
 import plotly.express as px
 import plotly.graph_objects as go
+import matplotlib.pyplot as plt
 from dotenv import load_dotenv
 
 # =======================
@@ -59,14 +60,15 @@ def get_date_range():
     result = get_sqlite_data(query)
     return result['min_date'][0], result['max_date'][0]
 
-def query_data(data_json, question, model_name="gpt-4o"):
+def query_data(data_json, question, model_name="gpt-4o-mini"):
     """Consulta a OpenAI con los datos y la pregunta del usuario."""
     prompt = f"""Basado en los siguientes datos, respondé la pregunta:
     {data_json}
     
     Pregunta: {question}"""
 
-    completion = openai.ChatCompletion.create(
+    client = openai.OpenAI()
+    completion = client.chat.completions.create(
         messages=[
             {"role": "system", "content": "Sos un asistente financiero que responde de forma clara y breve."},
             {"role": "user", "content": prompt}

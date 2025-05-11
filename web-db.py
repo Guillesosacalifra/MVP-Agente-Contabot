@@ -229,7 +229,7 @@ def show_metrics_tab(data_limited):
             
             # Preparar datos para gráfico más visual
             if len(gasto_por_categoria) > top_n:
-                top_categorias = gasto_por_categoria.head(top_n)
+                top_categorias = gasto_por_categoria.head(top_n-1)
                 otras = pd.DataFrame({
                     'categoria': ['Otras'],
                     'monto_UYU': [gasto_por_categoria.iloc[top_n:]['monto_UYU'].sum()],

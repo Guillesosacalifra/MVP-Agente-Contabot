@@ -521,9 +521,18 @@ def show_historial_tab():
 
         if data:
             df_historial = pd.DataFrame(data)
-            df_historial["fecha"] = pd.to_datetime(df_historial["fecha"], errors="coerce").dt.strftime('%Y-%m-%d %H:%M:%S')
+
+            # Ocultar columna ID si existe
+            if "id" in df_historial.columns:
+                df_historial = df_historial.drop(columns=["id"])
+
+            # Formato de fecha: solo año-mes-día
+            df_historial["fecha"] = pd.to_datetime(df_historial["fecha"], errors="coerce").dt.strftime('%Y-%m-%d')
+
+            # Mostrar tabla
             st.dataframe(df_historial)
 
+            # Botón de descarga
             st.download_button(
                 "📥 Descargar historial de consultas", 
                 df_historial.to_csv(index=False).encode('utf-8'),

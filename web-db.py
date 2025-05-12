@@ -123,8 +123,8 @@ def actualizar_historial(pregunta, respuesta):
         "respuesta": respuesta_final
     })
 
-def guardar_en_historial_bd(usuario, pregunta, respuesta):
-    conn = sqlite3.connect(DB_PATH)
+def guardar_en_historial_chat(usuario, pregunta, respuesta, db_path=DB_PATH):
+    conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     cursor.execute(
         "INSERT INTO historial_chat (fecha, usuario, pregunta, respuesta) VALUES (?, ?, ?, ?)",
@@ -438,8 +438,6 @@ def show_ai_tab(data_limited):
                 else:
                     respuesta_formateada = str(respuesta_completa)
                 
-                guardar_en_historial_bd("invitado", pregunta, respuesta_formateada)
-
                 # Guardar en el historial de chat y en el historial general
                 st.session_state.chat_preguntas.append(pregunta)
                 st.session_state.chat_respuestas.append(respuesta_formateada)
@@ -452,6 +450,8 @@ def show_ai_tab(data_limited):
                 </div>
                 """, unsafe_allow_html=True)
                 
+                guardar_en_historial_chat("invitado", pregunta, respuesta_formateada, db_path=DB_PATH)
+
             except Exception as e:
                 respuesta_error = f"❌ Error al ejecutar la consulta: {str(e)}"
                 

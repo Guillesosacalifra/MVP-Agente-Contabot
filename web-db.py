@@ -43,7 +43,7 @@ TABLE_NAME = "items_factura"
 HISTORIAL_TABLE = "historial_chat"
 
 # Inicializar la conexión a Supabase
-supabase = st.experimental_connection("supabase", type=SupabaseConnection)
+supabase = st.connection("supabase", type=SupabaseConnection)
 
 # Configurar la conexión de SQLDatabase para LangChain
 # Nota: supabase.connection da acceso a la conexión PostgreSQL subyacente

@@ -412,14 +412,14 @@ def show_ai_tab(data_limited):
     if 'chat_respuestas' not in st.session_state:
         st.session_state.chat_respuestas = []
 
-    # Solo mostrar la respuesta actual si existe
-    if st.session_state.chat_respuestas:
-        respuesta = st.session_state.chat_respuestas[-1]
-        st.markdown(f"""
-        <div style="background-color:#e8f5e9;padding:10px;border-radius:10px;margin-bottom:10px">
-        <b>🤖 Asistente:</b> {respuesta}
-        </div>
-        """, unsafe_allow_html=True)
+    # # Solo mostrar la respuesta actual si existe
+    # if st.session_state.chat_respuestas:
+    #     respuesta = st.session_state.chat_respuestas[-1]
+    #     st.markdown(f"""
+    #     <div style="background-color:#e8f5e9;padding:10px;border-radius:10px;margin-bottom:10px">
+    #     <b>🤖 Asistente:</b> {respuesta}
+    #     </div>
+    #     """, unsafe_allow_html=True)
 
     # Formulario para nueva consulta
     with st.form("chat_form"):

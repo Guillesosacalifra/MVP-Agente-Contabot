@@ -55,6 +55,8 @@ agent_executor = create_sql_agent(
     verbose=False  # Cambiado a False para no mostrar los pasos intermedios
 )
 
+
+
 # =======================
 # 🔧 FUNCIONES AUXILIARES
 # =======================
@@ -120,6 +122,35 @@ def actualizar_historial(pregunta, respuesta):
         "pregunta": pregunta, 
         "respuesta": respuesta_final
     })
+
+def guardar_en_historial_bd(usuario, pregunta, respuesta):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute(
+        "INSERT INTO historial_chat (fecha, usuario, pregunta, respuesta) VALUES (?, ?, ?, ?)",
+        (datetime.now().isoformat(), usuario, pregunta, respuesta)
+    )
+    conn.commit()
+    conn.close()
+
+def crear_tabla_historial():
+    """Crea la tabla 'historial_chat' si no existe, en la misma base de datos."""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS historial_chat (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            fecha TEXT,
+            usuario TEXT,
+            pregunta TEXT,
+            respuesta TEXT
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+# Llamar solo una vez
+crear_tabla_historial()
 
 # =======================
 # 🖥️ INTERFAZ PRINCIPAL
@@ -413,7 +444,8 @@ def show_ai_tab(data_limited):
                 st.session_state.chat_preguntas.append(pregunta)
                 st.session_state.chat_respuestas.append(respuesta_error)
                 actualizar_historial(pregunta, respuesta_error)
-                
+                guardar_en_historial_bd("invitado", pregunta, respuesta)
+
                 # Mostrar el error con estilo
                 st.markdown(f"""
                 <div style="background-color:#ffebee;padding:10px;border-radius:10px;margin-bottom:10px">

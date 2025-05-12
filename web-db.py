@@ -425,6 +425,8 @@ def show_ai_tab(data_limited):
                 else:
                     respuesta_formateada = str(respuesta_completa)
                 
+                guardar_en_historial_bd("invitado", pregunta, respuesta_formateada)
+
                 # Guardar en el historial de chat y en el historial general
                 st.session_state.chat_preguntas.append(pregunta)
                 st.session_state.chat_respuestas.append(respuesta_formateada)
@@ -444,7 +446,6 @@ def show_ai_tab(data_limited):
                 st.session_state.chat_preguntas.append(pregunta)
                 st.session_state.chat_respuestas.append(respuesta_error)
                 actualizar_historial(pregunta, respuesta_error)
-                guardar_en_historial_bd("invitado", pregunta, respuesta)
 
                 # Mostrar el error con estilo
                 st.markdown(f"""

@@ -4,6 +4,9 @@ openai>=1.12.0
 python-dotenv
 plotly  # solo si usás gráficos
 matplotlib
+langchain
 langchain_openai
 langchain_community
 st-supabase-connection
+psycopg2-binary
+

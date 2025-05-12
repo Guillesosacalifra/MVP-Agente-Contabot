@@ -121,7 +121,7 @@ def main():
     )
     
     # Crear pestañas
-    tab_resumen, tab_datos, tab_ia = st.tabs([
+    tab_resumen, tab_datos, tab_ia, tab_historial = st.tabs([
         "📈 Resumen", 
         "📊 Datos", 
         "🤖 Análisis con IA", 

@@ -48,7 +48,7 @@ supabase = st.connection("supabase", type=SupabaseConnection)
 # Configurar la conexión de SQLDatabase para LangChain
 # Nota: supabase.connection da acceso a la conexión PostgreSQL subyacente
 # que se puede usar con SQLDatabase de LangChain
-db = SQLDatabase.from_uri(os.getenv("SUPABASE_CONNECTION_STRING", ""))
+db = SQLDatabase.from_uri(os.getenv("SUPABASE_CONNECTION_STRING"))
 
 # Instanciar el modelo
 llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)

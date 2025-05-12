@@ -512,25 +512,30 @@ def show_ai_tab(data_limited):
                 """, unsafe_allow_html=True)
 
 def show_historial_tab():
-    """Muestra el historial de consultas y respuestas."""
+    """Muestra el historial de consultas y respuestas desde Supabase."""
     st.subheader("📜 Historial de Consultas")
-    
-    if len(st.session_state.historial_conversaciones) > 0:
-        # Crear DataFrame para mostrar historial
-        df_historial = pd.DataFrame(st.session_state.historial_conversaciones)
-        df_historial['fecha'] = pd.to_datetime(df_historial['fecha']).dt.strftime('%Y-%m-%d %H:%M:%S')  # Formato de fecha
-        st.dataframe(df_historial)
-        
-        # Agregar botón para descargar el historial
-        st.download_button(
-            "📥 Descargar historial de consultas", 
-            df_historial.to_csv(index=False).encode('utf-8'),
-            "historial_consultas.csv",
-            "text/csv",
-            key='download-history'
-        )
-    else:
-        st.write("No hay conversaciones registradas aún.")
+
+    try:
+        response = supabase.table("historial_chat").select("*").order("fecha", desc=True).limit(50).execute()
+        data = response.data
+
+        if data:
+            df_historial = pd.DataFrame(data)
+            df_historial["fecha"] = pd.to_datetime(df_historial["fecha"], errors="coerce").dt.strftime('%Y-%m-%d %H:%M:%S')
+            st.dataframe(df_historial)
+
+            st.download_button(
+                "📥 Descargar historial de consultas", 
+                df_historial.to_csv(index=False).encode('utf-8'),
+                "historial_consultas.csv",
+                "text/csv",
+                key='download-history'
+            )
+        else:
+            st.write("No hay conversaciones guardadas en Supabase aún.")
+    except Exception as e:
+        st.error(f"❌ Error al cargar historial desde Supabase: {e}")
+
 
 # Ejecutar la aplicación
 if __name__ == "__main__":

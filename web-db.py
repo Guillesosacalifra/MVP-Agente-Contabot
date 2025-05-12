@@ -17,7 +17,7 @@ from dotenv import load_dotenv
 from datetime import datetime
 from langchain_openai import ChatOpenAI
 from langchain_community.utilities import SQLDatabase
-from langchain.agents import create_sql_agent
+from langchain_community.agent_toolkits.sql.base import create_sql_agent
 from langchain.agents.agent_types import AgentType
 
 # =======================
@@ -148,6 +148,22 @@ def crear_tabla_historial():
     ''')
     conn.commit()
     conn.close()
+
+def tabla_existe(nombre_tabla, db_path):
+    """Verifica si la tabla existe en la base de datos."""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT name FROM sqlite_master 
+        WHERE type='table' AND name=?;
+    """, (nombre_tabla,))
+    existe = cursor.fetchone() is not None
+    conn.close()
+    return existe
+
+# Verificar y crear si no existe
+if not tabla_existe("historial_chat", DB_PATH):
+    crear_tabla_historial()
 
 # =======================
 # 🖥️ INTERFAZ PRINCIPAL

@@ -345,6 +345,12 @@ def show_data_tab(data_limited):
     if 'fecha' in data_limited.columns:
         data_limited['fecha'] = pd.to_datetime(data_limited['fecha']).dt.date
     
+    # Asegurarse de que los montos sean de tipo numérico
+    if 'monto_item' in data_limited.columns:
+        data_limited['monto_item'] = pd.to_numeric(data_limited['monto_item'], errors='coerce')
+    if 'monto_UYU' in data_limited.columns:
+        data_limited['monto_UYU'] = pd.to_numeric(data_limited['monto_UYU'], errors='coerce')
+    
     # Columnas a ocultar del editor
     columnas_a_ocultar = ["sucursal", "codigo_sucursal", "direccion", "cantidad", "archivo", "precio_unitario"]
     columnas_visibles = [col for col in data_limited.columns if col not in columnas_a_ocultar]

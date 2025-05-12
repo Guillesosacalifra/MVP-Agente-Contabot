@@ -36,8 +36,9 @@ st.set_page_config(
     layout="wide"
 )
 
-# Lista para guardar el historial de preguntas y respuestas
-historial_conversaciones = []
+# Inicializar el historial si no existe en st.session_state
+if 'historial_conversaciones' not in st.session_state:
+    st.session_state.historial_conversaciones = []
 
 # Constantes
 DB_PATH = "facturas_xml_items.db"
@@ -115,7 +116,13 @@ def convert_to_uyu(dataframe):
 
 # Función para actualizar el historial
 def actualizar_historial(pregunta, respuesta):
-    historial_conversaciones.append({"fecha": datetime.now(), "pregunta": pregunta, "respuesta": respuesta})
+    """Agrega una nueva consulta al historial en session_state"""
+    st.session_state.historial_conversaciones.append({
+        "fecha": datetime.now(), 
+        "pregunta": pregunta, 
+        "respuesta": respuesta
+    })
+
 
 # =======================
 # 🖥️ INTERFAZ PRINCIPAL
@@ -403,13 +410,15 @@ def show_ai_tab(data_limited):
 def show_historial_tab():
     """Muestra el historial de consultas y respuestas."""
     st.subheader("📜 Historial de Consultas")
-    if len(historial_conversaciones) > 0:
+    
+    if len(st.session_state.historial_conversaciones) > 0:
         # Crear DataFrame para mostrar historial
-        df_historial = pd.DataFrame(historial_conversaciones)
+        df_historial = pd.DataFrame(st.session_state.historial_conversaciones)
         df_historial['fecha'] = pd.to_datetime(df_historial['fecha']).dt.strftime('%Y-%m-%d %H:%M:%S')  # Formato de fecha
         st.dataframe(df_historial)
     else:
         st.write("No hay conversaciones registradas aún.")
+        
 
 # Ejecutar la aplicación
 if __name__ == "__main__":

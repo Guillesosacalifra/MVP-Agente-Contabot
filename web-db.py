@@ -39,7 +39,7 @@ if 'historial_conversaciones' not in st.session_state:
     st.session_state.historial_conversaciones = []
 
 # Constantes
-DB_PATH = "facturas_xml_items.db"
+DB_PATH = os.path.join(os.getcwd(), "facturas_xml_items.db")
 TABLE_NAME = "items_factura"
 
 # Conexión a SQLite

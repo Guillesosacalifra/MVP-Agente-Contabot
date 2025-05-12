@@ -19,7 +19,6 @@ from langchain_openai import ChatOpenAI
 from langchain_community.utilities import SQLDatabase
 from langchain_community.agent_toolkits.sql.base import create_sql_agent
 from langchain.agents.agent_types import AgentType
-from st_supabase_connection import SupabaseConnection
 
 
 # =======================
@@ -57,8 +56,6 @@ agent_executor = create_sql_agent(
     verbose=False  # Cambiado a False para no mostrar los pasos intermedios
 )
 
-# Inicializar la conexión
-supabase = st.experimental_connection("supabase", type=SupabaseConnection)
 
 # =======================
 # 🔧 FUNCIONES AUXILIARES

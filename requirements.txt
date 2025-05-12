@@ -6,3 +6,4 @@ plotly  # solo si usás gráficos
 matplotlib
 langchain_openai
 langchain_community
+st-supabase-connection

@@ -427,7 +427,7 @@ def show_data_tab(data_limited):
     
     # Convertir la fecha a formato legible
     if 'fecha' in data_limited.columns:
-        data_limited['fecha'] = pd.to_datetime(data_limited['fecha']).dt.date
+        data_limited['fecha'] = pd.to_datetime(data_limited['fecha'], errors="coerce").dt.date
     
     # Asegurarse de que los montos sean de tipo numérico
     if 'monto_item' in data_limited.columns:

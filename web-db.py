@@ -74,18 +74,27 @@ def get_date_range():
     result = get_sqlite_data(query)
     return result['min_date'][0], result['max_date'][0]
 
-def query_data(data_json, question, model_name="gpt-4o-mini"):
+def query_data(data_json, gasto_por_categoria, question, model_name="gpt-4o-mini"):
     """Consulta a OpenAI con los datos y la pregunta del usuario."""
-    prompt = f"""Basado en los siguientes datos, respondé la pregunta:
-    {data_json}
-    
-    Pregunta: {question}"""
+    user_prompt = (
+    "Tenés acceso a dos tablas:\n"
+    "1. Una tabla detallada de movimientos financieros (facturas, fechas, montos, proveedores).\n"
+    "2. Una tabla de resumen por categoría (`gasto_por_categoria`), que indica el gasto total representado en UYU por categoría.\n\n"
+    "Tu tarea es responder la siguiente pregunta exclusivamente en base a los datos proporcionados.\n"
+    "- Si la pregunta menciona algun dato de la tabla categorías o la palabra categoria, respondé exclusivamente en base a la tabla de categorías.\n"
+    "- Si no, respondé usando la tabla de movimientos detallados.\n"
+    "- No inventes valores. Respondé únicamente con los datos dados.\n\n"
+    "- Antes de responder tomate un momento y verifica cualquier calculo que tengas que hacer con los datos de las tablas.\n\n"
+    f"Tabla de categorías:\n{gasto_por_categoria.to_json(orient='records')}\n\n"
+    f"Tabla de movimientos:\n{data_json}\n\n"
+    f"Pregunta: {question}"
+)
 
     client = openai.OpenAI()
     completion = client.chat.completions.create(
         messages=[
             {"role": "system", "content": "Sos un asistente financiero que responde de forma clara y breve."},
-            {"role": "user", "content": prompt}
+            {"role": "user", "content": user_prompt}
         ],
         model=model_name
     )

@@ -407,7 +407,7 @@ def show_ai_tab(data_limited):
 
     # Formulario para nueva consulta
     with st.form("chat_form"):
-        pregunta = st.text_input("💬 Escribí tu pregunta", key="input_pregunta", placeholder="¿Cuánto gasté en marzo?")
+        pregunta = st.text_input("💬 Escribí tu pregunta!", key="input_pregunta", placeholder="¿Cuánto gasté en marzo?")
         enviar = st.form_submit_button("Enviar")
 
     if enviar and pregunta:

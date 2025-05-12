@@ -351,6 +351,10 @@ def show_data_tab(data_limited):
     if 'monto_UYU' in data_limited.columns:
         data_limited['monto_UYU'] = pd.to_numeric(data_limited['monto_UYU'], errors='coerce')
     
+    # Formatear las columnas de monto antes de mostrarlas
+    data_limited['monto_item'] = data_limited['monto_item'].apply(lambda x: f"${x:,.2f}" if pd.notna(x) else "$0.00")
+    data_limited['monto_UYU'] = data_limited['monto_UYU'].apply(lambda x: f"${x:,.2f}" if pd.notna(x) else "$0.00")
+    
     # Columnas a ocultar del editor
     columnas_a_ocultar = ["sucursal", "codigo_sucursal", "direccion", "cantidad", "archivo", "precio_unitario"]
     columnas_visibles = [col for col in data_limited.columns if col not in columnas_a_ocultar]

@@ -19,6 +19,7 @@ from langchain_openai import ChatOpenAI
 from langchain_community.utilities import SQLDatabase
 from langchain_community.agent_toolkits.sql.base import create_sql_agent
 from langchain.agents.agent_types import AgentType
+from supabase import create_client, Client
 
 
 # =======================
@@ -56,6 +57,9 @@ agent_executor = create_sql_agent(
     verbose=False  # Cambiado a False para no mostrar los pasos intermedios
 )
 
+url = os.getenv("SUPABASE_URL")
+key = os.getenv("SUPABASE_API_KEY")
+supabase: Client = create_client(url, key)
 
 # =======================
 # 🔧 FUNCIONES AUXILIARES
@@ -175,6 +179,28 @@ def tabla_existe(nombre_tabla, db_path):
 if not tabla_existe("historial_chat", DB_PATH):
     crear_tabla_historial()
 
+def guardar_en_supabase(usuario, pregunta, respuesta):
+    fecha = datetime.now().isoformat()
+    try:
+        supabase.table("historial_chat").insert({
+            "fecha": fecha,
+            "usuario": usuario,
+            "pregunta": pregunta,
+            "respuesta": respuesta
+        }).execute()
+        return True
+    except Exception as e:
+        st.error(f"❌ Error al guardar en Supabase: {e}")
+        return False
+
+def obtener_historial():
+    try:
+        response = supabase.table("historial_chat").select("*").order("fecha", desc=True).limit(10).execute()
+        return response.data
+    except Exception as e:
+        st.error(f"❌ Error al obtener historial: {e}")
+        return []
+    
 # =======================
 # 🖥️ INTERFAZ PRINCIPAL
 # =======================
@@ -451,7 +477,7 @@ def show_ai_tab(data_limited):
                 # Guardar en el historial de chat y en el historial general
                 st.session_state.chat_preguntas.append(pregunta)
                 st.session_state.chat_respuestas.append(respuesta_formateada)
-                actualizar_historial(pregunta, respuesta_completa)
+                # actualizar_historial(pregunta, respuesta_completa)
                 
                 # Mostrar solo la respuesta con estilo
                 st.markdown(f"""
@@ -460,7 +486,7 @@ def show_ai_tab(data_limited):
                 </div>
                 """, unsafe_allow_html=True)
                 
-                guardar_en_historial_chat("invitado", pregunta, respuesta_formateada, db_path=DB_PATH)
+                guardar_en_supabase("invitado", pregunta, respuesta_formateada)
 
             except Exception as e:
                 respuesta_error = f"❌ Error al ejecutar la consulta: {str(e)}"

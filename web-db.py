@@ -12,22 +12,19 @@ import streamlit as st
 import pandas as pd
 import sqlite3
 import os
-import openai
 import plotly.express as px
-import plotly.graph_objects as go
-import matplotlib.pyplot as plt
 from dotenv import load_dotenv
 from datetime import datetime
-
+from langchain_openai import ChatOpenAI
+from langchain_community.utilities import SQLDatabase
+from langchain.agents import create_sql_agent
+from langchain.agents.agent_types import AgentType
 
 # =======================
 # ⚙️ CONFIGURACIÓN INICIAL
 # =======================
 # Cargar variables de entorno
 load_dotenv()
-
-# Configuración de OpenAI
-openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # Configuración de la página Streamlit
 st.set_page_config(
@@ -44,24 +41,41 @@ if 'historial_conversaciones' not in st.session_state:
 DB_PATH = "facturas_xml_items.db"
 TABLE_NAME = "items_factura"
 
+# Conexión a SQLite
+db = SQLDatabase.from_uri("sqlite:///facturas_xml_items.db")
+
+# Instanciar el modelo
+llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+
+# Crear el agente con SQL
+agent_executor = create_sql_agent(
+    llm=llm,
+    db=db,
+    agent_type=AgentType.OPENAI_FUNCTIONS,
+    verbose=False  # Cambiado a False para no mostrar los pasos intermedios
+)
+
 # =======================
 # 🔧 FUNCIONES AUXILIARES
 # =======================
 
 def get_sqlite_data(query):
-    """Ejecuta una consulta SQL y devuelve los resultados en un DataFrame."""
     conn = sqlite3.connect(DB_PATH)
     df = pd.read_sql_query(query, conn)
     conn.close()
     
-    # Asegurarse de que las columnas 'monto_item' y 'monto_UYU' sean numéricas
+    # Columnas numéricas
     if 'monto_item' in df.columns:
         df['monto_item'] = pd.to_numeric(df['monto_item'], errors='coerce')
     if 'monto_UYU' in df.columns:
         df['monto_UYU'] = pd.to_numeric(df['monto_UYU'], errors='coerce')
     
-    return df
+    # ✅ Convertir fecha como texto ISO sin interpretar como milisegundos
+    if 'fecha' in df.columns:
+        df['fecha'] = pd.to_datetime(df['fecha'], format='%Y-%m-%d', errors='coerce')  # Esto es correcto
+        df['fecha'] = df['fecha'].dt.strftime('%d-%m-%Y')  # Visualmente legible
 
+    return df
 
 def get_filter_options(column_name):
     """Devuelve los valores únicos de una columna (para filtros)."""
@@ -74,64 +88,38 @@ def get_date_range():
     result = get_sqlite_data(query)
     return result['min_date'][0], result['max_date'][0]
 
-def query_data(data_json, gasto_por_categoria, question, model_name="gpt-4o-mini"):
-    """Consulta a OpenAI con los datos y la pregunta del usuario."""
-    user_prompt = (
-    "Tenés acceso a dos tablas:\n"
-    "1. Una tabla detallada de movimientos financieros (facturas, fechas, montos, proveedores).\n"
-    "2. Una tabla de resumen por categoría (`gasto_por_categoria`), que indica el gasto total representado en UYU por categoría.\n\n"
-    "Tu tarea es responder la siguiente pregunta exclusivamente en base a los datos proporcionados.\n"
-    "- Si la pregunta menciona algun dato de la tabla categorías o la palabra categoria, respondé exclusivamente en base a la tabla de categorías.\n"
-    "- Si no, respondé usando la tabla de movimientos detallados.\n"
-    "- No inventes valores. Respondé únicamente con los datos dados.\n\n"
-    "- Antes de responder tomate un momento y verifica cualquier calculo que tengas que hacer con los datos de las tablas.\n\n"
-    f"Tabla de categorías:\n{gasto_por_categoria.to_json(orient='records')}\n\n"
-    f"Tabla de movimientos:\n{data_json}\n\n"
-    f"Pregunta: {question}"
-)
-
-    client = openai.OpenAI()
-    completion = client.chat.completions.create(
-        messages=[
-            {"role": "system", "content": "Sos un asistente financiero que responde de forma clara y breve."},
-            {"role": "user", "content": user_prompt}
-        ],
-        model=model_name
-    )
-
-    # Obtener uso de los tokens
-    usage = completion.usage
-    prompt_tokens = usage.prompt_tokens
-    completion_tokens = usage.completion_tokens
-    total_tokens = usage.total_tokens
-
-    # Mostrar consumo de tokens
-    st.info(f"🧮 Tokens usados - Prompt: {prompt_tokens}, Completion: {completion_tokens}, Total: {total_tokens}")
-
-    return completion.choices[0].message.content.strip()
+def query_data(pregunta):
+    return agent_executor.run(pregunta)
 
 def convert_to_uyu(dataframe):
     """Convierte montos a UYU según tipo de cambio."""
     required_columns = ["tipo_moneda", "monto_item", "tipo_cambio"]
     
     if all(col in dataframe.columns for col in required_columns):
-        dataframe["monto_UYU"] = dataframe.apply(
+        dataframe.loc[:, "monto_UYU"] = dataframe.apply(
             lambda row: row["monto_item"] if row["tipo_moneda"] == "UYU" 
-                       else row["monto_item"] * row["tipo_cambio"],
-            axis=1
+                    else row["monto_item"] * row["tipo_cambio"],
+        axis=1
         )
+
         return True
     return False
 
-# Función para actualizar el historial
+# Función para actualizar el historial - solo almacena el resultado final
 def actualizar_historial(pregunta, respuesta):
-    """Agrega una nueva consulta al historial en session_state"""
+    """Agrega una nueva consulta al historial en session_state, guardando solo el resultado final"""
+    if isinstance(respuesta, dict) and 'output' in respuesta:
+        # Si es un diccionario con clave 'output', guardamos solo ese valor
+        respuesta_final = respuesta['output']
+    else:
+        # Si no tiene ese formato, guardamos la respuesta completa
+        respuesta_final = str(respuesta)
+    
     st.session_state.historial_conversaciones.append({
         "fecha": datetime.now(), 
         "pregunta": pregunta, 
-        "respuesta": respuesta
+        "respuesta": respuesta_final
     })
-
 
 # =======================
 # 🖥️ INTERFAZ PRINCIPAL
@@ -249,117 +237,101 @@ def show_metrics_tab(data_limited):
     
     # === Análisis de gastos por categoría ===
     if "monto_UYU" in data_limited.columns and "categoria" in data_limited.columns:
+        st.subheader("📊 Distribución por categoría")
         # Calcular datos agrupados
         gasto_por_categoria = data_limited.groupby("categoria", dropna=False)["monto_UYU"].sum().reset_index()
         gasto_por_categoria = gasto_por_categoria.sort_values(by="monto_UYU", ascending=False)
         gasto_por_categoria["monto_UYU"] = gasto_por_categoria["monto_UYU"].round(2)
         gasto_por_categoria["porcentaje"] = (gasto_por_categoria["monto_UYU"] / gasto_por_categoria["monto_UYU"].sum() * 100).round(1)
-        
-        # Crear dos columnas para gráfica y tabla
-        col_grafico, col_tabla = st.columns([3, 2])
-        
-        with col_grafico:
-            # 📈 Gráfico de dona mejorado
-            st.subheader("📊 Distribución por categoría")
-            
-            # Opciones de visualización
-            top_n = st.slider("Mostrar top categorías", 3, min(10, len(gasto_por_categoria)), 6)
-            
-            # Preparar datos para gráfico más visual
-            if len(gasto_por_categoria) > top_n:
-                top_categorias = gasto_por_categoria.head(top_n-1)
-                otras = pd.DataFrame({
-                    'categoria': ['Otras'],
-                    'monto_UYU': [gasto_por_categoria.iloc[top_n:]['monto_UYU'].sum()],
-                    'porcentaje': [gasto_por_categoria.iloc[top_n:]['porcentaje'].sum()]
-                })
-                datos_grafico = pd.concat([top_categorias, otras])
-            else:
-                datos_grafico = gasto_por_categoria
-            
-            # Paleta de colores personalizada
-            colores = px.colors.qualitative.Bold
-            
-            # Crear gráfico interactivo
-            fig_dona = px.pie(
-                datos_grafico,
-                names="categoria",
-                values="monto_UYU",
-                hole=0.5,
-                color_discrete_sequence=colores,
-            )
-            
-            # Mejorar apariencia del gráfico
-            fig_dona.update_traces(
-                textposition='outside',
-                textinfo='percent+label',
-                hovertemplate='<b>%{label}</b><br>Monto: $%{value:,.2f}<br>Porcentaje: %{percent}<extra></extra>',
-                marker=dict(line=dict(color='#FFFFFF', width=2)),
-                pull=[0.05 if i == 0 else 0 for i in range(len(datos_grafico))]  # Destacar la primera categoría
-            )
-            
-            # Mejorar diseño general
-            fig_dona.update_layout(
-                title={
-                    'text': f"Distribución del gasto en UYU<br><sup>Top {top_n} categorías</sup>",
-                    'y':0.95,
-                    'x':0.5,
-                    'xanchor': 'center',
-                    'yanchor': 'top'
-                },
-                legend=dict(
-                    orientation="h",
-                    yanchor="bottom",
-                    y=-0.2,
-                    xanchor="center",
-                    x=0.5
-                ),
-                margin=dict(t=80, b=80),
-                font=dict(size=12)
-            )
-            
-            # Añadir total en el centro
-            fig_dona.add_annotation(
-                text=f"<b>Total</b><br>${datos_grafico['monto_UYU'].sum():,.0f}",
-                x=0.5, y=0.5,
-                font_size=14,
-                showarrow=False
-            )
-            
-            # Mostrar gráfico
-            st.plotly_chart(fig_dona, use_container_width=True)
-            
-            # Opción para descargar datos
-            st.download_button(
-                "📥 Descargar datos del gráfico", 
-                datos_grafico.to_csv(index=False).encode('utf-8'),
-                "categorias_gasto.csv",
-                "text/csv",
-                key='download-pie-data'
-            )
-        
-        with col_tabla:
-            # Tabla de gasto por categoría
-            st.subheader("🏷️ Detalle por categoría")
-            
-            # Agregar información de porcentaje a la tabla
-            tabla_formateada = gasto_por_categoria.copy()
-            tabla_formateada.columns = ["Categoría", "Monto (UYU)", "% del Total"]
-            
-            # Dar formato a la tabla con mejor estilo
-            st.dataframe(
-                tabla_formateada.style.format({
-                    "Monto (UYU)": "${:,.2f}", 
-                    "% del Total": "{:.1f}%"
-                }).background_gradient(
-                    cmap='Blues',
-                    subset=["Monto (UYU)"]
-                ),
-                use_container_width=True,
-                height=400
-            )
+
+        # Opciones de visualización
+        top_n = st.slider("Mostrar top categorías", 3, min(10, len(gasto_por_categoria)), 6)
+    
+        # Preparar datos para gráfico más visual
+        if len(gasto_por_categoria) > top_n:
+            top_categorias = gasto_por_categoria.head(top_n - 1)
+            otras = pd.DataFrame({
+                'categoria': ['Otras'],
+                'monto_UYU': [gasto_por_categoria.iloc[top_n:]['monto_UYU'].sum()],
+                'porcentaje': [gasto_por_categoria.iloc[top_n:]['porcentaje'].sum()]
+            })
+            datos_grafico = pd.concat([top_categorias, otras])
+        else:
+            datos_grafico = gasto_por_categoria
+    
+        # Crear gráfico
+        fig_dona = px.pie(
+            datos_grafico,
+            names="categoria",
+            values="monto_UYU",
+            hole=0.5,
+            color_discrete_sequence=px.colors.qualitative.Bold,
+        )
+    
+        fig_dona.update_traces(
+            textposition='outside',
+            textinfo='percent+label',
+            hovertemplate='<b>%{label}</b><br>Monto: $%{value:,.2f}<br>Porcentaje: %{percent}<extra></extra>',
+            marker=dict(line=dict(color='#FFFFFF', width=2)),
+            pull=[0.05 if i == 0 else 0 for i in range(len(datos_grafico))]
+        )
+    
+        fig_dona.update_layout(
+            title={
+                'text': f"Distribución del gasto en UYU<br><sup>Top {top_n} categorías</sup>",
+                'y': 0.95,
+                'x': 0.5,
+                'xanchor': 'center',
+                'yanchor': 'top'
+            },
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=-0.2,
+                xanchor="center",
+                x=0.5
+            ),
+            margin=dict(t=80, b=80),
+            font=dict(size=12)
+        )
+    
+        fig_dona.add_annotation(
+            text=f"<b>Total</b><br>${datos_grafico['monto_UYU'].sum():,.0f}",
+            x=0.5, y=0.5,
+            font_size=14,
+            showarrow=False
+        )
+    
+        st.plotly_chart(fig_dona, use_container_width=True)
+    
+        st.download_button(
+            "📥 Descargar datos del gráfico",
+            datos_grafico.to_csv(index=False).encode('utf-8'),
+            "categorias_gasto.csv",
+            "text/csv",
+            key='download-pie-data'
+        )
+    
+        # Mostrar tabla debajo
+        st.subheader("🏷️ Detalle por categoría")
+    
+        tabla_formateada = gasto_por_categoria.copy()
+        tabla_formateada.columns = ["Categoría", "Monto (UYU)", "% del Total"]
+    
+        st.dataframe(
+            tabla_formateada.style.format({
+                "Monto (UYU)": "${:,.2f}",
+                "% del Total": "{:.1f}%"
+            }).background_gradient(
+                cmap='Blues',
+                subset=["Monto (UYU)"]
+            ),
+            use_container_width=True,
+            height=400
+        )
     else:
         st.warning("⚠️ No se pudo calcular el gasto por categoría en UYU.")
+    
 
 def show_data_tab(data_limited):
     """Muestra la tabla de datos con valores formateados como moneda."""
@@ -387,40 +359,67 @@ def show_data_tab(data_limited):
     # Mostrar la tabla con st.dataframe
     st.dataframe(data_visible, use_container_width=True)
 
-
 def show_ai_tab(data_limited):
-    """Muestra la interfaz para consultas con IA."""
-    st.subheader("🧠 Consulta los datos con IA")
-    
-    # Campo de entrada para la pregunta
-    user_question = st.text_input("💬 Escribí tu pregunta:", placeholder="Ej: ¿Cuáles son mis 3 mayores gastos?")
-    
-    col1, col2 = st.columns([1, 3])
-    if col1.button("🔍 Consultar", use_container_width=True, type="primary"):
-        if user_question:
-            with st.spinner("Procesando consulta..."):
-                # Usamos solo columnas clave para evitar exceso de tokens
-                columnas_clave = ["fecha", "proveedor", "categoria", "monto_item", "tipo_moneda"]
-                if "monto_UYU" in data_limited.columns:
-                    columnas_clave.append("monto_UYU")
-                    
-                data_reducido = data_limited[columnas_clave].head(1500)
-                data_json = data_reducido.to_json(orient='records')
+    """Muestra la interfaz de chat con IA usando agente SQL."""
+    st.subheader("🧠 Chat con Agente SQL")
+
+    if 'chat_preguntas' not in st.session_state:
+        st.session_state.chat_preguntas = []
+    if 'chat_respuestas' not in st.session_state:
+        st.session_state.chat_respuestas = []
+
+    # Solo mostrar la respuesta actual si existe
+    if st.session_state.chat_respuestas:
+        respuesta = st.session_state.chat_respuestas[-1]
+        st.markdown(f"""
+        <div style="background-color:#e8f5e9;padding:10px;border-radius:10px;margin-bottom:10px">
+        <b>🤖 Asistente:</b> {respuesta}
+        </div>
+        """, unsafe_allow_html=True)
+
+    # Formulario para nueva consulta
+    with st.form("chat_form"):
+        pregunta = st.text_input("💬 Escribí tu pregunta", key="input_pregunta", placeholder="¿Cuánto gasté en marzo?")
+        enviar = st.form_submit_button("Enviar")
+
+    if enviar and pregunta:
+        with st.spinner("Consultando base de datos..."):
+            try:
+                # Ejecutar la consulta
+                respuesta_completa = agent_executor.invoke(pregunta)
                 
-                # Calcular gasto por categoría (solo categoría y monto)
-                gasto_por_categoria = data_limited.groupby("categoria", dropna=False)["monto_UYU"].sum().reset_index()
-                gasto_por_categoria = gasto_por_categoria.sort_values(by="monto_UYU", ascending=False)
-                gasto_por_categoria["monto_UYU"] = gasto_por_categoria["monto_UYU"].round(2)
+                # Extraer solo la respuesta final y formatearla profesionalmente
+                if isinstance(respuesta_completa, dict) and 'output' in respuesta_completa:
+                    respuesta_formateada = respuesta_completa['output']
+                else:
+                    respuesta_formateada = str(respuesta_completa)
                 
-                respuesta = query_data(data_json, gasto_por_categoria, user_question)
-        
-                st.write("🧠 Respuesta:")
-                st.success(respuesta)
+                # Guardar en el historial de chat y en el historial general
+                st.session_state.chat_preguntas.append(pregunta)
+                st.session_state.chat_respuestas.append(respuesta_formateada)
+                actualizar_historial(pregunta, respuesta_completa)
                 
-                # Actualizar historial con la pregunta y respuesta
-                actualizar_historial(user_question, respuesta)
-        else:
-            st.warning("⚠️ Por favor, ingresa una pregunta.")
+                # Mostrar solo la respuesta con estilo
+                st.markdown(f"""
+                <div style="background-color:#e8f5e9;padding:10px;border-radius:10px;margin-bottom:10px">
+                <b>🤖 Asistente:</b> {respuesta_formateada}
+                </div>
+                """, unsafe_allow_html=True)
+                
+            except Exception as e:
+                respuesta_error = f"❌ Error al ejecutar la consulta: {str(e)}"
+                
+                # Guardar en el historial
+                st.session_state.chat_preguntas.append(pregunta)
+                st.session_state.chat_respuestas.append(respuesta_error)
+                actualizar_historial(pregunta, respuesta_error)
+                
+                # Mostrar el error con estilo
+                st.markdown(f"""
+                <div style="background-color:#ffebee;padding:10px;border-radius:10px;margin-bottom:10px">
+                <b>❌ Error:</b> {respuesta_error}
+                </div>
+                """, unsafe_allow_html=True)
 
 def show_historial_tab():
     """Muestra el historial de consultas y respuestas."""
@@ -431,9 +430,17 @@ def show_historial_tab():
         df_historial = pd.DataFrame(st.session_state.historial_conversaciones)
         df_historial['fecha'] = pd.to_datetime(df_historial['fecha']).dt.strftime('%Y-%m-%d %H:%M:%S')  # Formato de fecha
         st.dataframe(df_historial)
+        
+        # Agregar botón para descargar el historial
+        st.download_button(
+            "📥 Descargar historial de consultas", 
+            df_historial.to_csv(index=False).encode('utf-8'),
+            "historial_consultas.csv",
+            "text/csv",
+            key='download-history'
+        )
     else:
         st.write("No hay conversaciones registradas aún.")
-        
 
 # Ejecutar la aplicación
 if __name__ == "__main__":

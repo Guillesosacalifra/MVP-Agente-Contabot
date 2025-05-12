@@ -196,10 +196,18 @@ def guardar_en_supabase(usuario, pregunta, respuesta):
 def obtener_historial():
     try:
         response = supabase.table("historial_chat").select("*").order("fecha", desc=True).limit(10).execute()
-        return response.data
+        data = response.data
+        if data:
+            df = pd.DataFrame(data)
+            if "fecha" in df.columns:
+                df["fecha"] = pd.to_datetime(df["fecha"], errors="coerce")  # clave: errors="coerce"
+            return df.to_dict(orient="records")
+        else:
+            return []
     except Exception as e:
         st.error(f"❌ Error al obtener historial: {e}")
         return []
+
     
 # =======================
 # 🖥️ INTERFAZ PRINCIPAL

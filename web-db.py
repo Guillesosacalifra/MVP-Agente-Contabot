@@ -346,7 +346,7 @@ def show_metrics_tab(data_limited):
         st.warning("⚠️ No se pudo calcular el gasto por categoría en UYU.")
 
 def show_data_tab(data_limited):
-    """Muestra la tabla de datos con opciones de edición."""
+    """Muestra la tabla de datos con valores formateados como moneda."""
     st.subheader("📋 Datos filtrados")
     
     # Convertir la fecha a formato legible
@@ -363,24 +363,14 @@ def show_data_tab(data_limited):
     data_limited['monto_item'] = data_limited['monto_item'].apply(lambda x: f"${x:,.2f}" if pd.notna(x) else "$0.00")
     data_limited['monto_UYU'] = data_limited['monto_UYU'].apply(lambda x: f"${x:,.2f}" if pd.notna(x) else "$0.00")
     
-    # Columnas a ocultar del editor
+    # Columnas a ocultar
     columnas_a_ocultar = ["sucursal", "codigo_sucursal", "direccion", "cantidad", "archivo", "precio_unitario"]
     columnas_visibles = [col for col in data_limited.columns if col not in columnas_a_ocultar]
     data_visible = data_limited[columnas_visibles].copy()
     
-    # Editor con la columna "categoria" editable
-    edited_data = st.data_editor(
-        data_visible,
-        num_rows="dynamic",
-        use_container_width=True,
-        column_config={
-            "fecha": st.column_config.DateColumn("Fecha", format="DD/MM/YYYY"),
-            "monto_item": st.column_config.NumberColumn("Monto", format="$.2f"),
-            "monto_UYU": st.column_config.NumberColumn("Monto UYU", format="$.2f"),
-        },
-        disabled=[col for col in data_visible.columns if col != "categoria"],
-        key="data_editor"
-    )
+    # Mostrar la tabla con st.dataframe
+    st.dataframe(data_visible, use_container_width=True)
+
 
 def show_ai_tab(data_limited):
     """Muestra la interfaz para consultas con IA."""

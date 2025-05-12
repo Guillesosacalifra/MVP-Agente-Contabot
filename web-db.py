@@ -406,7 +406,13 @@ def show_ai_tab(data_limited):
                     
                 data_reducido = data_limited[columnas_clave].head(1500)
                 data_json = data_reducido.to_json(orient='records')
-                respuesta = query_data(data_json, user_question)
+                
+                # Calcular gasto por categoría (solo categoría y monto)
+                gasto_por_categoria = data_limited.groupby("categoria", dropna=False)["monto_UYU"].sum().reset_index()
+                gasto_por_categoria = gasto_por_categoria.sort_values(by="monto_UYU", ascending=False)
+                gasto_por_categoria["monto_UYU"] = gasto_por_categoria["monto_UYU"].round(2)
+                
+                respuesta = query_data(data_json, gasto_por_categoria, user_question)
         
                 st.write("🧠 Respuesta:")
                 st.success(respuesta)

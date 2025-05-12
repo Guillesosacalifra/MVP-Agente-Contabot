@@ -17,6 +17,8 @@ import plotly.express as px
 import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 from dotenv import load_dotenv
+from datetime import datetime
+
 
 # =======================
 # ⚙️ CONFIGURACIÓN INICIAL
@@ -33,6 +35,9 @@ st.set_page_config(
     page_icon="💰",
     layout="wide"
 )
+
+# Lista para guardar el historial de preguntas y respuestas
+historial_conversaciones = []
 
 # Constantes
 DB_PATH = "facturas_xml_items.db"
@@ -100,6 +105,10 @@ def convert_to_uyu(dataframe):
         return True
     return False
 
+# Función para actualizar el historial
+def actualizar_historial(pregunta, respuesta):
+    historial_conversaciones.append({"fecha": datetime.now(), "pregunta": pregunta, "respuesta": respuesta})
+
 # =======================
 # 🖥️ INTERFAZ PRINCIPAL
 # =======================
@@ -115,7 +124,8 @@ def main():
     tab_resumen, tab_datos, tab_ia = st.tabs([
         "📈 Resumen", 
         "📊 Datos", 
-        "🤖 Análisis con IA"
+        "🤖 Análisis con IA", 
+        "📜 Historial"
     ])
 
     # Configurar sidebar y obtener datos filtrados
@@ -132,6 +142,10 @@ def main():
     # Contenido de pestaña IA
     with tab_ia:
         show_ai_tab(data_limited)
+
+    # Contenido de pestaña Historial
+    with tab_historial:
+        show_historial_tab()
 
 def configure_sidebar_and_get_data():
     """Configura los filtros del sidebar y retorna los datos filtrados."""
@@ -354,14 +368,6 @@ def show_ai_tab(data_limited):
     """Muestra la interfaz para consultas con IA."""
     st.subheader("🧠 Consulta los datos con IA")
     
-    # Agregar información para el usuario
-    st.info("""
-    Puedes preguntar cosas como:
-    - ¿Cuál es el proveedor con más gastos?
-    - ¿Cuánto gastamos en alimentos el mes pasado?
-    - ¿Cuál es la tendencia de gastos en la categoría servicios?
-    """)
-    
     # Campo de entrada para la pregunta
     user_question = st.text_input("💬 Escribí tu pregunta:", placeholder="Ej: ¿Cuáles son mis 3 mayores gastos?")
     
@@ -380,8 +386,22 @@ def show_ai_tab(data_limited):
         
                 st.write("🧠 Respuesta:")
                 st.success(respuesta)
+                
+                # Actualizar historial con la pregunta y respuesta
+                actualizar_historial(user_question, respuesta)
         else:
             st.warning("⚠️ Por favor, ingresa una pregunta.")
+
+def show_historial_tab():
+    """Muestra el historial de consultas y respuestas."""
+    st.subheader("📜 Historial de Consultas")
+    if len(historial_conversaciones) > 0:
+        # Crear DataFrame para mostrar historial
+        df_historial = pd.DataFrame(historial_conversaciones)
+        df_historial['fecha'] = pd.to_datetime(df_historial['fecha']).dt.strftime('%Y-%m-%d %H:%M:%S')  # Formato de fecha
+        st.dataframe(df_historial)
+    else:
+        st.write("No hay conversaciones registradas aún.")
 
 # Ejecutar la aplicación
 if __name__ == "__main__":

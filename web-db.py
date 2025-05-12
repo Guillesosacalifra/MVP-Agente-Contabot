@@ -52,7 +52,15 @@ def get_sqlite_data(query):
     conn = sqlite3.connect(DB_PATH)
     df = pd.read_sql_query(query, conn)
     conn.close()
+    
+    # Asegurarse de que las columnas 'monto_item' y 'monto_UYU' sean numéricas
+    if 'monto_item' in df.columns:
+        df['monto_item'] = pd.to_numeric(df['monto_item'], errors='coerce')
+    if 'monto_UYU' in df.columns:
+        df['monto_UYU'] = pd.to_numeric(df['monto_UYU'], errors='coerce')
+    
     return df
+
 
 def get_filter_options(column_name):
     """Devuelve los valores únicos de una columna (para filtros)."""

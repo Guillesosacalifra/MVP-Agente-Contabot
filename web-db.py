@@ -149,9 +149,6 @@ def crear_tabla_historial():
     conn.commit()
     conn.close()
 
-# Llamar solo una vez
-crear_tabla_historial()
-
 # =======================
 # 🖥️ INTERFAZ PRINCIPAL
 # =======================

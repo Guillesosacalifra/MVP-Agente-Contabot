@@ -123,15 +123,25 @@ def actualizar_historial(pregunta, respuesta):
         "respuesta": respuesta_final
     })
 
+import sqlite3
+from datetime import datetime
+
 def guardar_en_historial_chat(usuario, pregunta, respuesta, db_path=DB_PATH):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute(
-        "INSERT INTO historial_chat (fecha, usuario, pregunta, respuesta) VALUES (?, ?, ?, ?)",
-        (datetime.now().isoformat(), usuario, pregunta, respuesta)
-    )
-    conn.commit()
-    conn.close()
+    try:
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        cursor.execute(
+            "INSERT INTO historial_chat (fecha, usuario, pregunta, respuesta) VALUES (?, ?, ?, ?)",
+            (datetime.now().isoformat(), usuario, pregunta, respuesta)
+        )
+        conn.commit()
+        conn.close()
+        print("✅ Registro guardado exitosamente.")
+        return True
+    except sqlite3.Error as e:
+        print(f"❌ Error al guardar en la base de datos: {e}")
+        return False
+
 
 def crear_tabla_historial():
     """Crea la tabla 'historial_chat' si no existe, en la misma base de datos."""

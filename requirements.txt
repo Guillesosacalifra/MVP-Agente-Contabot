@@ -9,4 +9,4 @@ langchain_openai
 langchain_community
 st-supabase-connection
 psycopg2-binary
-
+supabase

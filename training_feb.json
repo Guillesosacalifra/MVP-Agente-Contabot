@@ -1,0 +1,88 @@
+
+[
+  {"prompt": "Cabal Uruguay SA; ADMNISTRACIÓN; 559,33", "completion": "Comisiones tarjetas"},
+  {"prompt": "OCA S.A; ADMNISTRACIÓN; 2.919,03", "completion": "Comisiones tarjetas"},
+  {"prompt": "OCA S.A; ADMNISTRACIÓN; 3.491,36", "completion": "Comisiones tarjetas"},
+  
+  {"prompt": "Corporación Vial del Uruguay; MELO; 2.459,02", "completion": "Telepeaje"},
+  {"prompt": "CORPORACION VIAL DEL URUGUAY SA; MELO; 2.459,02", "completion": "Telepeaje"},
+
+  {"prompt": "DAC GRUPO AGENCIA Mallas que tuvo que enviar Melo; MALDONADO; 3.327,87", "completion": "Flete Costo de mercaderías"},
+
+  {"prompt": "MELO; 1.540,00", "completion": "Gastos Varios"},
+  {"prompt": "CERVINIA S.A. RATICIDA; MALDONADO; 714,75", "completion": "Gastos Varios"},
+
+  {"prompt": "Nancy; RRHH; 2.150,00", "completion": "Sueldos y Jornales"},
+  {"prompt": "Sueldo Cristian; RRHH; 28.916,00", "completion": "Sueldos y Jornales"},
+  {"prompt": "Sueldo Febrero Luis Alvez; RRHH; 20.777,00", "completion": "Sueldos y Jornales"},
+  {"prompt": "Liquidacion Luis Alvez; RRHH; 51.685,00", "completion": "Sueldos y Jornales"},
+  {"prompt": "Sueldo Jimena; RRHH; 34.991,00", "completion": "Sueldos y Jornales"},
+  {"prompt": "Sueldo Juan Mattozo; RRHH; 20.208,00", "completion": "Sueldos y Jornales"},
+  {"prompt": "Sueldo Braian; RRHH; 27.469,00", "completion": "Sueldos y Jornales"},
+  {"prompt": "Sueldo Luis Alvez; RRHH; 36.678,00", "completion": "Sueldos y Jornales"},
+
+  {"prompt": "Adelanto Cristian; RRHH; 5.000,00", "completion": "Adelanto de sueldos"},
+  {"prompt": "Adelanto Jimena; RRHH; 5.000,00", "completion": "Adelanto de sueldos"},
+  {"prompt": "Adelanto Braian; RRHH; 5.000,00", "completion": "Adelanto de sueldos"},
+  {"prompt": "Adelanto Juan; RRHH; 5.000,00", "completion": "Adelanto de sueldos"},
+  {"prompt": "Adelanto Luis; RRHH; 5.000,00", "completion": "Adelanto de sueldos"},
+
+  {"prompt": "BANCO DE PREVISIÓN SOCIAL; RRHH; 97.446,00", "completion": "Cargas Sociales"},
+
+  {"prompt": "MAPFRE (SEGURO GALPÓN) seguro vehículos; MELO; 1.107,16", "completion": "Seguros"},
+  {"prompt": "MAPFRE (SEGURO GALPÓN) AUTOMOVILES; MELO; 2.774,96", "completion": "Seguros"},
+  {"prompt": "BSE Seguro por accidentes de trabajo; ADMNISTRACIÓN; 6.117,51", "completion": "Seguros"},
+
+  {"prompt": "PALAM SRL; MELO; 385,25", "completion": "Papelería"},
+
+  {"prompt": "Honorarios Profesionales; GASTÓN RODRÍGUEZ; ADMNISTRACIÓN; 13.934,43", "completion": "Honorarios Profesionales"},
+  {"prompt": "Servicios Contratados; PUNTA TRAKING; MELO; 2.311,48", "completion": "Servicios Contratados"},
+  {"prompt": "Energía Eléctrica y Aguas Corrientes; UTE; MALDONADO; 6.744,73", "completion": "Energía Eléctrica y Aguas Corrientes"},
+  {"prompt": "Comunicaciones y Servicios Telefónicos; ADMINISTRACION NACIONAL DE TELECOMUNICACIONES (ANTEL); MELO; 4.945,08", "completion": "Comunicaciones y Servicios Telefónicos"},
+  {"prompt": "Alquileres; MELO; 23.388,00", "completion": "Alquileres"},
+  {"prompt": "Alquileres; MALDONADO; 111.875,00", "completion": "Alquileres"},
+
+  {"prompt": "Publicidad; C W 53 LA VOZ DE MELO S.R.L.; MELO; 6.900,00", "completion": "Publicidad"},
+  {"prompt": "Publicidad; RITMO FM LTDA.; MELO; 4.896,77", "completion": "Publicidad"},
+  {"prompt": "Publicidad; ADMNISTRACIÓN; 22.919,45", "completion": "Publicidad"},
+
+  {"prompt": "Representación; AGRO EN PUNTA SAS; MALDONADO; 0,00", "completion": "Representación"},
+
+  {"prompt": "Comisiones por ventas; Emiliano; MELO; 18.100,00", "completion": "Comisiones por ventas"},
+  {"prompt": "Comisiones por ventas; Machado; MELO; 1.300,00", "completion": "Comisiones por ventas"},
+  {"prompt": "Comisiones por ventas; Maria; MELO; 1.800,00", "completion": "Comisiones por ventas"},
+  {"prompt": "Comisiones por ventas; Carlin; MELO; 8.100,00", "completion": "Comisiones por ventas"},
+  {"prompt": "Comisiones por ventas; Braian; MELO; 5.900,00", "completion": "Comisiones por ventas"},
+
+  {"prompt": "Costos de Servicios; ABITAB S.A; ADMNISTRACIÓN; 4.130,33", "completion": "Costos de Servicios"},
+
+  {"prompt": "Intereses y Gastos Bancarios (16); ADMNISTRACIÓN; 7.667,22", "completion": "Intereses y Gastos Bancarios"},
+  {"prompt": "Intereses y Gastos Bancarios; ADMNISTRACIÓN; 3.854,24", "completion": "Intereses y Gastos Bancarios"},
+  {"prompt": "Intereses y Gastos Bancarios; ADMNISTRACIÓN; 2.301,85", "completion": "Intereses y Gastos Bancarios"},
+
+  {"prompt": "THANGO S.A; [M 16/14] Alambre Morlan (16/14); 15.245,10", "completion": "Costos de ventas"},
+  {"prompt": "FAJARDO HERMANOS SOCIEDAD AGROPECUARIA; [M ELECTRO F] Alambre Morlan Eléctrico; 1.704,20", "completion": "Costos de ventas"},
+  {"prompt": "NIN URIARTE ENRIQUE CARLOS; [M 16/14] Alambre Morlan (16/14); 2.518,99", "completion": "Costos de ventas"},
+  {"prompt": "NIN URIARTE ENRIQUE CARLOS; [M ATILLO] Alambre Atillo Morlan (Nº12); 1.207,42", "completion": "Costos de ventas"},
+  {"prompt": "NIN URIARTE ENRIQUE CARLOS; [M RIENDA] Alambre Rienda Morlan (Nº6); 1.164,29", "completion": "Costos de ventas"},
+  {"prompt": "Laura Techera; [ATILLO1KG18] M Atillo 1kg 18; 71,17", "completion": "Costos de ventas"},
+  {"prompt": "Laura Techera; [M RIENDA] Alambre Rienda Morlan (Nº6); 1.164,29", "completion": "Costos de ventas"},
+  {"prompt": "Ecleir Cruzado; [M ATILLO] Alambre Atillo Morlan (Nº12); 1.207,42", "completion": "Costos de ventas"},
+  {"prompt": "Elma Belquis Gonzalez; [M ATILLO] Alambre Atillo Morlan (Nº12); 1.207,42", "completion": "Costos de ventas"},
+  {"prompt": "Consumidor Final; [M RIENDA] Alambre Rienda Morlan (Nº6); 1.164,29", "completion": "Costos de ventas"},
+  {"prompt": "Martin Ansolabehere; [M RIENDA] Alambre Rienda Morlan (Nº6); 3.492,87", "completion": "Costos de ventas"},
+  {"prompt": "Martin Ansolabehere; [M ATILLO] Alambre Atillo Morlan (Nº12); 2.414,84", "completion": "Costos de ventas"},
+  {"prompt": "Martin Ansolabehere; [M 17/15] Alambre Morlan (17/15); 4.527,82", "completion": "Costos de ventas"},
+  {"prompt": "Consumidor Final; [M 16/14] Alambre Morlan (16/14); 2.518,99", "completion": "Costos de ventas"},
+  {"prompt": "Consumidor Final; [M ATILLO] Alambre Atillo Morlan (Nº12); 1.207,42", "completion": "Costos de ventas"},
+  {"prompt": "Consumidor Final; [2713] Malla Soldada de Seguridad Morlan (1m); 2.545,88", "completion": "Costos de ventas"},
+  {"prompt": "INTENDENCIA DE CERRO LARGO; [M 16/14] Alambre Morlan (16/14); 2.517,02", "completion": "Costos de ventas"},
+  {"prompt": "Consumidor Final; [M2715] Malla Soldada de Seguridad Morlan (1.5m); 1.724,88", "completion": "Costos de ventas"},
+  {"prompt": "Consumidor Final; [TEN6MM-1/4] Tensor R para Malla (6mm - 1/4); 184,90", "completion": "Costos de ventas"},
+  {"prompt": "ALEGRES SAS EN FORMACION; [M2714] Malla Soldada de Seguridad Morlan (1.2m); 5.619,80", "completion": "Costos de ventas"},
+  {"prompt": "ALEGRES SAS EN FORMACION; [M GRAMPA 09] Grampa Zincada BWG 09 X 1'; 63,21", "completion": "Costos de ventas"},
+  {"prompt": "ALEGRES SAS EN FORMACION; [TEN8MM-5/16] Tensor R para Malla (8mm - 5/16); 304,80", "completion": "Costos de ventas"},
+  {"prompt": "ALEGRES SAS EN FORMACION; [M ATILLO] Alambre Atillo Morlan (Nº12); 1.207,42", "completion": "Costos de ventas"}
+
+  
+]

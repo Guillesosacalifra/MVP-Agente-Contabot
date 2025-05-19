@@ -39,6 +39,8 @@ from langchain_openai import ChatOpenAI
 from langchain_community.utilities import SQLDatabase
 from langchain_community.agent_toolkits.sql.base import create_sql_agent
 from langchain.agents.agent_types import AgentType
+from babel.dates import format_date
+
 
 
 # =======================
@@ -357,21 +359,24 @@ def configure_sidebar_and_get_data():
     # Detectar sistema operativo
     sistema = platform.system()
 
-    try:
-        if sistema == "Windows":
-            locale.setlocale(locale.LC_TIME, "Spanish_Spain")
-        else:  # Linux, Mac, etc.
-            locale.setlocale(locale.LC_TIME, "es_ES.utf8")
-    except locale.Error:
-        print("⚠️ Locale no disponible. Se usará configuración por defecto.")
+    # try:
+    #     if sistema == "Windows":
+    #         locale.setlocale(locale.LC_TIME, "Spanish_Spain")
+    #     else:  # Linux, Mac, etc.
+    #         locale.setlocale(locale.LC_TIME, "es_ES.utf8")
+    # except locale.Error:
+    #     print("⚠️ Locale no disponible. Se usará configuración por defecto.")
 
-    # Año actual por defecto
+    # Obtener lista de meses en español usando Babel
+    meses = [format_date(datetime(2000, i, 1), "MMMM", locale="es") for i in range(1, 13)]
+    meses = [mes.capitalize() for mes in meses]  # Capitalizar la primera letra
+
+    # Año y mes actual
     current_year = datetime.now().year
     current_month = datetime.now().month
 
-    # 📅 Elegir mes y año
+    # Sidebar para elegir mes y año
     st.sidebar.subheader("📅 Mes a consultar")
-    meses = [calendar.month_name[i].capitalize() for i in range(1, 13)]  # ["Enero", ..., "Diciembre"]
     mes_elegido = st.sidebar.selectbox("Mes", meses, index=current_month - 1)
     año_elegido = st.sidebar.number_input("Año", value=current_year, min_value=2020, max_value=2100)
 

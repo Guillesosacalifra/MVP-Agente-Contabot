@@ -268,13 +268,6 @@ def obtener_historial():
 
 def dashboard_streamlit():
 
-    # Configuración de la página Streamlit
-    st.set_page_config(
-        page_title="Dashboard de Gastos",
-        page_icon="💰",
-        layout="wide"
-    )
-    
     # Paso previo: pedir nombre de usuario
     if "usuario" not in st.session_state or not st.session_state.usuario:
         st.title("🔐 Ingreso al Dashboard")

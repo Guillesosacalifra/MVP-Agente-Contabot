@@ -286,7 +286,7 @@ def dashboard_streamlit():
 
         if nombre:
             st.session_state.usuario = nombre.strip()
-            st.experimental_user()
+            st.rerun()
         else:
             st.warning("⚠️ Ingresá tu nombre para continuar.")
         return  # 👈 Importante: evitar mostrar el dashboard hasta que haya nombre

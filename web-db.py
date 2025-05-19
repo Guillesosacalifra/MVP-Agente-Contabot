@@ -46,12 +46,6 @@ from langchain.agents.agent_types import AgentType
 # Cargar variables de entorno
 load_dotenv()
 
-# Configuración de la página Streamlit
-st.set_page_config(
-    page_title="Dashboard de Gastos",
-    page_icon="💰",
-    layout="wide"
-)
 
 # Inicializar el historial si no existe en st.session_state
 if 'historial_conversaciones' not in st.session_state:
@@ -267,6 +261,13 @@ def obtener_historial():
 # =======================
 
 def dashboard_streamlit():
+
+    # Configuración de la página Streamlit
+    st.set_page_config(
+        page_title="Dashboard de Gastos",
+        page_icon="💰",
+        layout="wide"
+    )
 
     # Paso previo: pedir nombre de usuario
     if "usuario" not in st.session_state or not st.session_state.usuario:

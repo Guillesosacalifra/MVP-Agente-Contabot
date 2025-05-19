@@ -266,6 +266,13 @@ def obtener_historial():
 # 🖥️ INTERFAZ PRINCIPAL
 # =======================
 
+# Configuración de la página Streamlit
+st.set_page_config(
+    page_title="Dashboard de Gastos",
+    page_icon="💰",
+    layout="wide"
+)
+
 def dashboard_streamlit():
 
     
@@ -686,10 +693,4 @@ def show_historial_tab():
 # Ejecutar la aplicación
 if __name__ == "__main__":
     
-    # Configuración de la página Streamlit
-    st.set_page_config(
-        page_title="Dashboard de Gastos",
-        page_icon="💰",
-        layout="wide"
-    )
     dashboard_streamlit()

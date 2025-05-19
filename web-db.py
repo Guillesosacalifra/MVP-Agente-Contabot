@@ -266,16 +266,15 @@ def obtener_historial():
 # 🖥️ INTERFAZ PRINCIPAL
 # =======================
 
-# Configuración de la página Streamlit
-st.set_page_config(
-    page_title="Dashboard de Gastos",
-    page_icon="💰",
-    layout="wide"
-)
-
 def dashboard_streamlit():
 
-
+    # Configuración de la página Streamlit
+    st.set_page_config(
+        page_title="Dashboard de Gastos",
+        page_icon="💰",
+        layout="wide"
+    )
+    
     # Paso previo: pedir nombre de usuario
     if "usuario" not in st.session_state or not st.session_state.usuario:
         st.title("🔐 Ingreso al Dashboard")
@@ -283,24 +282,10 @@ def dashboard_streamlit():
 
         if nombre:
             st.session_state.usuario = nombre.strip()
-            st.experimental_user()
+            st.experimental_rerun()
         else:
             st.warning("⚠️ Ingresá tu nombre para continuar.")
         return  # 👈 Importante: evitar mostrar el dashboard hasta que haya nombre
-    
-    # # Lista de meses por nombre
-    # MESES = [
-    # "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-    # "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
-    # ]
-
-
-    # st.title("📅 Seleccionar mes y año")
-    # nombre_mes = st.selectbox("Mes", MESES, index=datetime.today().month - 1)
-    # año = st.number_input("Año", min_value=2020, max_value=2035, value=datetime.today().year)
-
-    # # Convertir el nombre del mes a número (1–12)
-    # mes = MESES.index(nombre_mes) + 1   
     
     # Constantes
     DB_PATH = os.path.join(os.getcwd(), "cfe_recibidos.db")

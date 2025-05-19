@@ -110,9 +110,18 @@ def crear_tabla_sqlite(nombre_tabla, db_path="cfe_recibidos.db"):
     conn.close()
 
 def get_sqlite_data(query):
-    conn = sqlite3.connect(DB_PATH)
-    df = pd.read_sql_query(query, conn)
-    conn.close()
+    import sqlite3
+    print("🧪 Ejecutando query:")
+    print(query)
+    
+    try:
+        conn = sqlite3.connect("cfe_recibidos.db")
+        df = pd.read_sql_query(query, conn)
+        return df
+    except Exception as e:
+        print("❌ ERROR al ejecutar SQL:")
+        print(e)
+        return pd.DataFrame()
     
     # Columnas numéricas
     if 'monto_item' in df.columns:

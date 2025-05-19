@@ -266,15 +266,14 @@ def obtener_historial():
 # 🖥️ INTERFAZ PRINCIPAL
 # =======================
 
-# Configuración de la página Streamlit
-st.set_page_config(
-    page_title="Dashboard de Gastos",
-    page_icon="💰",
-    layout="wide"
-)
-
 def dashboard_streamlit():
 
+    # Configuración de la página Streamlit
+    st.set_page_config(
+        page_title="Dashboard de Gastos",
+        page_icon="💰",
+        layout="wide"
+    )
     
     # Paso previo: pedir nombre de usuario
     if "usuario" not in st.session_state or not st.session_state.usuario:
@@ -288,26 +287,27 @@ def dashboard_streamlit():
             st.warning("⚠️ Ingresá tu nombre para continuar.")
         return  # 👈 Importante: evitar mostrar el dashboard hasta que haya nombre
     
-    # Lista de meses por nombre
-    MESES = [
-    "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-    "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
-    ]
+    # # Lista de meses por nombre
+    # MESES = [
+    # "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+    # "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+    # ]
 
 
-    st.title("📅 Seleccionar mes y año")
-    nombre_mes = st.selectbox("Mes", MESES, index=datetime.today().month - 1)
-    año = st.number_input("Año", min_value=2020, max_value=2035, value=datetime.today().year)
-    mes = MESES.index(nombre_mes) + 1   
+    # st.title("📅 Seleccionar mes y año")
+    # nombre_mes = st.selectbox("Mes", MESES, index=datetime.today().month - 1)
+    # año = st.number_input("Año", min_value=2020, max_value=2035, value=datetime.today().year)
+
+    # # Convertir el nombre del mes a número (1–12)
+    # mes = MESES.index(nombre_mes) + 1   
     
     # Constantes
     DB_PATH = os.path.join(os.getcwd(), "cfe_recibidos.db")
-    TABLE_NAME = f"{mes}_{año}"
+    # TABLE_NAME = f"{mes}_{año}"
 
     # Inicializar el historial si no existe en st.session_state
     if 'historial_conversaciones' not in st.session_state:
         st.session_state.historial_conversaciones = []
-
     # Verificar y crear si no existe
     if not tabla_existe("historial_chat", DB_PATH):
         crear_tabla_historial()
@@ -341,7 +341,7 @@ def dashboard_streamlit():
     ])
 
     # Configurar sidebar y obtener datos filtrados
-    data_limited, tabla_dinamica = configure_sidebar_and_get_data(TABLE_NAME=TABLE_NAME)
+    data_limited, tabla_dinamica = configure_sidebar_and_get_data()
     
     # Contenido de pestaña Resumen
     with tab_resumen:
@@ -359,7 +359,7 @@ def dashboard_streamlit():
     with tab_historial:
         show_historial_tab()
 
-def configure_sidebar_and_get_data(TABLE_NAME):
+def configure_sidebar_and_get_data():
     """Configura los filtros del sidebar y retorna los datos filtrados."""
     st.sidebar.markdown(f"👤 Usuario: **{st.session_state.usuario}**")
     st.sidebar.header("📌 Filtros")
@@ -692,5 +692,4 @@ def show_historial_tab():
 
 # Ejecutar la aplicación
 if __name__ == "__main__":
-    
     dashboard_streamlit()

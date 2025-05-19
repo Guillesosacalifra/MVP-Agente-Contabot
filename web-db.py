@@ -268,12 +268,6 @@ def obtener_historial():
 
 def dashboard_streamlit():
 
-    # Configuración de la página Streamlit
-    st.set_page_config(
-        page_title="Dashboard de Gastos",
-        page_icon="💰",
-        layout="wide"
-    )
     
     # Paso previo: pedir nombre de usuario
     if "usuario" not in st.session_state or not st.session_state.usuario:
@@ -306,6 +300,7 @@ def dashboard_streamlit():
     # Inicializar el historial si no existe en st.session_state
     if 'historial_conversaciones' not in st.session_state:
         st.session_state.historial_conversaciones = []
+
     # Verificar y crear si no existe
     if not tabla_existe("historial_chat", DB_PATH):
         crear_tabla_historial()
@@ -690,4 +685,11 @@ def show_historial_tab():
 
 # Ejecutar la aplicación
 if __name__ == "__main__":
+    
+    # Configuración de la página Streamlit
+    st.set_page_config(
+        page_title="Dashboard de Gastos",
+        page_icon="💰",
+        layout="wide"
+    )
     dashboard_streamlit()

@@ -31,6 +31,7 @@ import locale
 import glob
 from supabase import create_client, Client
 import psycopg2
+import platform
 
 import streamlit as st
 import plotly.express as px
@@ -344,7 +345,16 @@ def configure_sidebar_and_get_data():
     st.sidebar.markdown(f"👤 Usuario: **{st.session_state.usuario}**")
     st.sidebar.header("📌 Filtros")
 
-    locale.setlocale(locale.LC_TIME, "Spanish_Spain")  # Windows
+    # Detectar sistema operativo
+    sistema = platform.system()
+
+    try:
+        if sistema == "Windows":
+            locale.setlocale(locale.LC_TIME, "Spanish_Spain")
+        else:  # Linux, Mac, etc.
+            locale.setlocale(locale.LC_TIME, "es_ES.utf8")
+    except locale.Error:
+        print("⚠️ Locale no disponible. Se usará configuración por defecto.")
 
     # Año actual por defecto
     current_year = datetime.now().year

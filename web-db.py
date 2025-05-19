@@ -8,18 +8,43 @@ almacenadas en una base de datos SQLite.
 # =======================
 # 📦 IMPORTACIONES
 # =======================
-import streamlit as st
-import pandas as pd
-import sqlite3
-import os
-import plotly.express as px
-from dotenv import load_dotenv
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support import expected_conditions as EC
+import time
 from datetime import datetime
+from tqdm import tqdm
+import shutil
+import xml.etree.ElementTree as ET
+import sqlite3
+import zipfile
+import tempfile
+import re
+import os
+import sqlite3
+import openai
+import pandas as pd
+import json
+import sys
+from dotenv import load_dotenv
+load_dotenv()
+from math import ceil
+import calendar
+import locale
+import glob
+from supabase import create_client, Client
+import psycopg2
+
+import streamlit as st
+import plotly.express as px
 from langchain_openai import ChatOpenAI
 from langchain_community.utilities import SQLDatabase
 from langchain_community.agent_toolkits.sql.base import create_sql_agent
 from langchain.agents.agent_types import AgentType
-from supabase import create_client, Client
 
 
 # =======================
@@ -65,6 +90,37 @@ supabase: Client = create_client(url, key)
 # 🔧 FUNCIONES AUXILIARES
 # =======================
 
+def crear_tabla_sqlite(nombre_tabla, db_path="cfe_recibidos.db"):
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+
+    cursor.execute(f'''
+    CREATE TABLE IF NOT EXISTS {nombre_tabla} (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        fecha TEXT,
+        proveedor TEXT,
+        ruc TEXT,
+        nombre_comercial TEXT,
+        giro TEXT,
+        telefono TEXT,
+        sucursal TEXT,
+        codigo_sucursal TEXT,
+        direccion TEXT,
+        ciudad TEXT,
+        departamento TEXT,
+        nom_item TEXT,
+        cantidad REAL,
+        precio_unitario REAL,
+        monto_item REAL,
+        tipo_moneda TEXT,
+        tipo_cambio REAL,
+        monto_UYU REAL,  
+        archivo TEXT
+    )
+    ''')
+    conn.commit()
+    conn.close()
+
 def get_sqlite_data(query):
     conn = sqlite3.connect(DB_PATH)
     df = pd.read_sql_query(query, conn)
@@ -83,16 +139,29 @@ def get_sqlite_data(query):
 
     return df
 
-def get_filter_options(column_name):
-    """Devuelve los valores únicos de una columna (para filtros)."""
-    query = f"SELECT DISTINCT {column_name} FROM {TABLE_NAME}"
-    return get_sqlite_data(query)[column_name].dropna().tolist()
+def get_filter_options(columna, tabla_dinamica):
+    try:
+        query = f"SELECT DISTINCT {columna} FROM {tabla_dinamica}"
+        return get_sqlite_data(query)[columna].dropna().tolist()
+    except Exception as e:
+        st.warning(f"⚠️ Datos de '{tabla_dinamica}' aun no registrados")
+        return []
 
-def get_date_range():
+
+def get_date_range(tabla_dinamica):
     """Obtiene las fechas mínima y máxima del campo 'fecha'."""
-    query = f"SELECT MIN(fecha) as min_date, MAX(fecha) as max_date FROM {TABLE_NAME}"
+    query = f"SELECT MIN(fecha) as min_date, MAX(fecha) as max_date FROM {tabla_dinamica}"
     result = get_sqlite_data(query)
-    return result['min_date'][0], result['max_date'][0]
+    min_raw = result['min_date'][0]
+    max_raw = result['max_date'][0]
+
+    # Si la tabla está vacía, devolver fechas del mes actual
+    if not min_raw or not max_raw:
+        hoy = datetime.today()
+        inicio = datetime(hoy.year, hoy.month, 1).date()
+        fin = datetime(hoy.year, hoy.month, 28).date()  # valor seguro si no querés calcular fin de mes exacto
+        return inicio, fin
+    return datetime.strptime(min_raw, "%Y-%m-%d").date(), datetime.strptime(max_raw, "%Y-%m-%d").date()
 
 def query_data(pregunta):
     return agent_executor.run(pregunta)
@@ -127,10 +196,7 @@ def actualizar_historial(pregunta, respuesta):
         "respuesta": respuesta_final
     })
 
-import sqlite3
-from datetime import datetime
-
-def guardar_en_historial_chat(usuario, pregunta, respuesta, db_path=DB_PATH):
+def guardar_en_historial_chat(usuario, pregunta, respuesta, db_path):
     try:
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
@@ -175,10 +241,6 @@ def tabla_existe(nombre_tabla, db_path):
     conn.close()
     return existe
 
-# Verificar y crear si no existe
-if not tabla_existe("historial_chat", DB_PATH):
-    crear_tabla_historial()
-
 def guardar_en_supabase(usuario, pregunta, respuesta):
     fecha = datetime.now().isoformat()
     try:
@@ -207,13 +269,56 @@ def obtener_historial():
     except Exception as e:
         st.error(f"❌ Error al obtener historial: {e}")
         return []
-
-    
 # =======================
 # 🖥️ INTERFAZ PRINCIPAL
 # =======================
 
-def main():
+def dashboard_streamlit(mes,año):
+
+    # Configuración de la página Streamlit
+    st.set_page_config(
+        page_title="Dashboard de Gastos",
+        page_icon="💰",
+        layout="wide"
+    )
+    
+    # Paso previo: pedir nombre de usuario
+    if "usuario" not in st.session_state or not st.session_state.usuario:
+        st.title("🔐 Ingreso al Dashboard")
+        nombre = st.text_input("🧑 Ingresá tu nombre para comenzar:", value="")
+
+        if nombre:
+            st.session_state.usuario = nombre.strip()
+            st.experimental_user()
+        else:
+            st.warning("⚠️ Ingresá tu nombre para continuar.")
+        return  # 👈 Importante: evitar mostrar el dashboard hasta que haya nombre
+    
+    # Constantes
+    DB_PATH = os.path.join(os.getcwd(), "cfe_recibidos.db")
+    TABLE_NAME = f"{mes}_{año}"
+
+    # Inicializar el historial si no existe en st.session_state
+    if 'historial_conversaciones' not in st.session_state:
+        st.session_state.historial_conversaciones = []
+    # Verificar y crear si no existe
+    if not tabla_existe("historial_chat", DB_PATH):
+        crear_tabla_historial()
+        
+    # Conexión a SQLite
+    db = SQLDatabase.from_uri("sqlite:///cfe_recibidos.db")
+    
+    # Instanciar el modelo
+    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+    
+    # Crear el agente con SQL
+    agent_executor = create_sql_agent(
+        llm=llm,
+        db=db,
+        agent_type=AgentType.OPENAI_FUNCTIONS,
+        verbose=False  # Cambiado a False para no mostrar los pasos intermedios
+    )
+    
     # Título del dashboard con estilo
     st.markdown(
         '<h1 style="text-align:center; color:#3366ff;">Dashboard de Gastos</h1>', 
@@ -229,7 +334,7 @@ def main():
     ])
 
     # Configurar sidebar y obtener datos filtrados
-    data_limited = configure_sidebar_and_get_data()
+    data_limited, tabla_dinamica = configure_sidebar_and_get_data(TABLE_NAME=TABLE_NAME)
     
     # Contenido de pestaña Resumen
     with tab_resumen:
@@ -247,20 +352,35 @@ def main():
     with tab_historial:
         show_historial_tab()
 
-def configure_sidebar_and_get_data():
+def configure_sidebar_and_get_data(TABLE_NAME):
     """Configura los filtros del sidebar y retorna los datos filtrados."""
+    st.sidebar.markdown(f"👤 Usuario: **{st.session_state.usuario}**")
     st.sidebar.header("📌 Filtros")
-    
+
+    locale.setlocale(locale.LC_TIME, "Spanish_Spain")  # Windows
+
+    # Año actual por defecto
+    current_year = datetime.now().year
+    current_month = datetime.now().month
+
+    # 📅 Elegir mes y año
+    st.sidebar.subheader("📅 Mes a consultar")
+    meses = [calendar.month_name[i].capitalize() for i in range(1, 13)]  # ["Enero", ..., "Diciembre"]
+    mes_elegido = st.sidebar.selectbox("Mes", meses, index=current_month - 1)
+    año_elegido = st.sidebar.number_input("Año", value=current_year, min_value=2020, max_value=2100)
+
+    tabla_dinamica = f"{mes_elegido}_{año_elegido}"
+    crear_tabla_sqlite(tabla_dinamica)
     # Obtener fechas mínimas y máximas para el rango de fechas
-    min_date, max_date = get_date_range()
-    date_range = st.sidebar.date_input("📅 Rango de fechas", [min_date, max_date])
+    min_date, max_date = get_date_range(tabla_dinamica)
+    date_range = st.sidebar.date_input("📅 Rango específico (opcional)", [min_date, max_date])
     
     # Filtro de proveedor
-    proveedores = get_filter_options("proveedor")
+    proveedores = get_filter_options("proveedor", tabla_dinamica)
     proveedor = st.sidebar.selectbox("🏢 Proveedor", ["Todos"] + proveedores)
     
     # Filtro de categoría
-    categorias = get_filter_options("categoria")
+    categorias = get_filter_options("categoria", tabla_dinamica)
     categoria = st.sidebar.selectbox("🏷️ Categoría", ["Todas"] + categorias)
     
     # Separador visual
@@ -270,7 +390,7 @@ def configure_sidebar_and_get_data():
     row_limit = st.sidebar.slider('🔢 Limitar filas mostradas:', 10, 1000, 500)
     
     # Construir query con filtros
-    query = f"SELECT * FROM {TABLE_NAME} WHERE 1=1"
+    query = f"SELECT * FROM {tabla_dinamica} WHERE 1=1"
     if date_range:
         query += f" AND fecha BETWEEN '{date_range[0]}' AND '{date_range[1]}'"
     if proveedor != "Todos":
@@ -287,7 +407,7 @@ def configure_sidebar_and_get_data():
     if not success:
         st.sidebar.warning("⚠️ No se pudieron convertir los montos a UYU")
     
-    return data_limited
+    return data_limited, tabla_dinamica
 
 def show_metrics_tab(data_limited):
     """Muestra métricas y gráficos en la pestaña de resumen."""
@@ -455,7 +575,19 @@ def show_ai_tab(data_limited):
         st.session_state.chat_preguntas = []
     if 'chat_respuestas' not in st.session_state:
         st.session_state.chat_respuestas = []
-
+    # Conexión a SQLite
+    db = SQLDatabase.from_uri("sqlite:///cfe_recibidos.db")
+    
+    # Instanciar el modelo
+    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+    
+    # Crear el agente con SQL
+    agent_executor = create_sql_agent(
+        llm=llm,
+        db=db,
+        agent_type=AgentType.OPENAI_FUNCTIONS,
+        verbose=False  # Cambiado a False para no mostrar los pasos intermedios
+    )
     # # Solo mostrar la respuesta actual si existe
     # if st.session_state.chat_respuestas:
     #     respuesta = st.session_state.chat_respuestas[-1]
@@ -467,7 +599,7 @@ def show_ai_tab(data_limited):
 
     # Formulario para nueva consulta
     with st.form("chat_form"):
-        pregunta = st.text_input("💬 Escribí tu pregunta!", key="input_pregunta", placeholder="¿Cuánto gasté en marzo?")
+        pregunta = st.text_input("💬 Escribí tu consulta", key="input_pregunta", placeholder="¿Cuánto gasté en marzo?")
         enviar = st.form_submit_button("Enviar")
 
     if enviar and pregunta:
@@ -489,12 +621,12 @@ def show_ai_tab(data_limited):
                 
                 # Mostrar solo la respuesta con estilo
                 st.markdown(f"""
-                <div style="background-color:#e8f5e9;padding:10px;border-radius:10px;margin-bottom:10px">
+                <div style="background-color:#2e7d32;padding:10px;border-radius:10px;margin-bottom:10px">
                 <b>🤖 Asistente:</b> {respuesta_formateada}
                 </div>
                 """, unsafe_allow_html=True)
                 
-                guardar_en_supabase("invitado", pregunta, respuesta_formateada)
+                guardar_en_supabase(st.session_state.usuario, pregunta, respuesta_formateada)
 
             except Exception as e:
                 respuesta_error = f"❌ Error al ejecutar la consulta: {str(e)}"
@@ -517,35 +649,45 @@ def show_historial_tab():
 
     try:
         response = supabase.table("historial_chat").select("*").order("fecha", desc=True).limit(50).execute()
+
+        # Verificar que response tiene atributo .data
+        if not hasattr(response, "data") or response.data is None:
+            st.warning("⚠️ No se recibió ningún dato de Supabase.")
+            return
+
         data = response.data
+        if not data:
+            st.info("ℹ️ No hay conversaciones guardadas en Supabase aún.")
+            return
 
-        if data:
-            df_historial = pd.DataFrame(data)
+        # Crear DataFrame y limpiar
+        df_historial = pd.DataFrame(data)
 
-            # Ocultar columna ID si existe
-            if "id" in df_historial.columns:
-                df_historial = df_historial.drop(columns=["id"])
+        if "id" in df_historial.columns:
+            df_historial.drop(columns=["id"], inplace=True)
 
-            # Formato de fecha: solo año-mes-día
+        if "fecha" in df_historial.columns:
             df_historial["fecha"] = pd.to_datetime(df_historial["fecha"], errors="coerce").dt.strftime('%Y-%m-%d')
 
-            # Mostrar tabla
-            st.dataframe(df_historial)
+        st.dataframe(df_historial)
 
-            # Botón de descarga
-            st.download_button(
-                "📥 Descargar historial de consultas", 
-                df_historial.to_csv(index=False).encode('utf-8'),
-                "historial_consultas.csv",
-                "text/csv",
-                key='download-history'
-            )
-        else:
-            st.write("No hay conversaciones guardadas en Supabase aún.")
+        st.download_button(
+            "📥 Descargar historial de consultas", 
+            df_historial.to_csv(index=False).encode('utf-8'),
+            "historial_consultas.csv",
+            "text/csv",
+            key='download-history'
+        )
+
     except Exception as e:
         st.error(f"❌ Error al cargar historial desde Supabase: {e}")
-
+        st.exception(e)
 
 # Ejecutar la aplicación
 if __name__ == "__main__":
-    main()
+    st.title("📅 Seleccionar mes y año")
+    mes = st.selectbox("Mes", list(range(1, 13)), index=4)
+    año = st.number_input("Año", min_value=2020, max_value=2030, value=2025)
+
+    if st.button("Ingresar al Dashboard"):
+        dashboard_streamlit(mes, año)

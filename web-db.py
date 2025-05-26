@@ -558,8 +558,15 @@ def show_data_tab(data_limited):
     
     # Convertir la fecha a formato legible
     if 'fecha' in data_limited.columns:
+        data_limited['fecha'] = pd.to_datetime(data_limited['fecha']).dt.date
+
+    # Campo de búsqueda
+    busqueda = st.text_input("🔍 Buscar en los datos:", placeholder="Escribí texto para filtrar...")
+
+    # Convertir la fecha a formato legible
+    if 'fecha' in data_limited.columns:
         data_limited['fecha'] = pd.to_datetime(data_limited['fecha'], errors="coerce").dt.date
-    
+
     # Asegurarse de que los montos sean de tipo numérico
     if 'monto_item' in data_limited.columns:
         data_limited['monto_item'] = pd.to_numeric(data_limited['monto_item'], errors='coerce')
@@ -574,10 +581,16 @@ def show_data_tab(data_limited):
     columnas_a_ocultar = ["sucursal", "codigo_sucursal", "direccion", "cantidad", "archivo", "precio_unitario"]
     columnas_visibles = [col for col in data_limited.columns if col not in columnas_a_ocultar]
     data_visible = data_limited[columnas_visibles].copy()
-    
+
+    # Filtro dinámico por búsqueda
+    if busqueda:
+        busqueda = busqueda.lower()
+        data_visible = data_visible[
+            data_visible.apply(lambda fila: fila.astype(str).str.lower().str.contains(busqueda).any(), axis=1)
+        ]
+        
     # Mostrar la tabla con st.dataframe
     st.dataframe(data_visible, use_container_width=True)
-
 def show_ai_tab(data_limited):
     """Muestra la interfaz de chat con IA usando agente SQL."""
     st.subheader("🧠 Chat con Agente SQL")
